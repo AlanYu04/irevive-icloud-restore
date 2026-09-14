@@ -18,12 +18,19 @@
               <span class="title-icon">i</span>Revive <span class="version-label" id="app-version"></span>
               <span class="tagline">For when iCloud Restore messes you about.</span>
             </h1>
-            <a href="https://gilroy.digital" target="_blank" rel="noopener noreferrer" class="brand-link" id="brand-link">gilroy.digital</a>
+            <div class="brand-links">
+              <a href="https://gilroy.digital" target="_blank" rel="noopener noreferrer" class="brand-link" id="brand-link">gilroy.digital</a>
+              <span class="brand-sep">&middot;</span>
+              <button type="button" class="link-button brand-link" data-open-privacy>Privacy</button>
+              <span class="brand-sep">&middot;</span>
+              <button type="button" class="link-button brand-link" id="btn-check-updates">Check for updates</button>
+            </div>
           </div>
         </div>
         <div class="header-right">
           <button id="btn-help" class="btn-icon" title="How to use">Instructions</button>
-<button id="btn-donate" class="btn-icon btn-donate-icon" title="Donate">Donate</button>
+          <button id="btn-support" class="btn-icon" title="Report a problem or suggest a feature">Report</button>
+          <button id="btn-donate" class="btn-icon btn-donate-icon" title="Donate">Donate</button>
           <div class="status-bar">
             <span class="status-dot" id="status-dot"></span>
             <span class="status-text" id="status-text">Disconnected</span>
@@ -137,7 +144,7 @@
               <span class="step-num">A</span>
               <div>
                 <strong>Auto Mode</strong>
-                <p>Click "Auto Mode" to run hands-free overnight. Set the wait time (default 5 min) using the input next to the button. It will automatically select items, wait, click restore, wait, and repeat. A countdown bar shows time until the next action. Click "Stop Auto" to stop at any time.</p>
+                <p>Click "Auto Mode" to run hands-free overnight. Set the wait time (default 5 min) using the input next to the button. Each cycle waits for iCloud to finish loading, selects items, waits, clicks restore, waits again, and repeats. A countdown bar shows time until the next action. Click "Stop Auto" to stop at any time.</p>
               </div>
             </div>
           </div>
@@ -177,7 +184,7 @@
             <a href="https://donate.stripe.com/14A28r1Fq9yNf7agVqfbq02" target="_blank" rel="noopener noreferrer" class="donate-link welcome-donate-link">Support this project</a>
             <div class="welcome-credits">
               <p>Built by <strong>Leon Gilroy</strong> | <a href="https://gilroy.digital" target="_blank" rel="noopener noreferrer" class="brand-link">Gilroy Digital</a></p>
-              <p class="welcome-support"><a href="mailto:leon@gilroy.digital" class="mail-link">leon@gilroy.digital</a></p>
+              <p class="welcome-support"><a href="mailto:leon@gilroy.digital" class="mail-link">leon@gilroy.digital</a> &middot; <button type="button" class="link-button mail-link" data-open-privacy>Privacy</button></p>
             </div>
           </div>
         </div>
@@ -226,6 +233,34 @@
         </div>
       </div>
     </div>
+    <!-- Apple Error Modal: iCloud's Restore Files list won't load -->
+    <div class="modal-overlay" id="modal-apple-error">
+      <div class="modal modal-update modal-apple-error">
+        <div class="modal-body update-body">
+          <div class="update-icon apple-error-icon">!</div>
+          <h2>iCloud isn't loading your files</h2>
+          <p class="update-text">
+            Apple's servers are having a problem listing your deleted files, so there's nothing
+            to select yet. <span id="apple-error-detail"></span>
+          </p>
+          <p class="update-text" id="apple-error-auto" hidden>
+            Auto Mode will keep trying every cycle, so you can leave it running.
+          </p>
+          <div class="apple-error-check">
+            <strong>Check it isn't iRevive</strong>
+            <p>
+              Open icloud.com/recovery in Safari or another browser, sign in and click
+              Restore Files. If your files load there but not in iRevive, please send a report.
+            </p>
+          </div>
+          <div class="update-buttons">
+            <button id="btn-apple-error-browser" class="btn">Open in Browser</button>
+            <button id="btn-apple-error-report" class="btn btn-primary">Report</button>
+          </div>
+          <button type="button" class="link-button apple-error-close" id="btn-apple-error-close">Close</button>
+        </div>
+      </div>
+    </div>
     <!-- Restart Modal -->
     <div class="modal-overlay" id="modal-restart">
       <div class="modal modal-update">
@@ -237,6 +272,186 @@
             <button id="btn-restart-now" class="btn btn-primary">Restart Now</button>
             <button id="btn-restart-later" class="btn">Later</button>
           </div>
+        </div>
+      </div>
+    </div>
+    <!-- Support Modal -->
+    <div class="modal-overlay" id="modal-support">
+      <div class="modal modal-support" role="dialog" aria-labelledby="support-heading">
+        <div class="modal-header" id="support-header">
+          <div>
+            <h2 id="support-heading">How can we help?</h2>
+            <p class="modal-subtitle" id="support-subheading">Goes straight to the person who can fix it.</p>
+          </div>
+          <button class="modal-close" id="close-support" aria-label="Close">&times;</button>
+        </div>
+
+        <!-- Step 1: bug or feature -->
+        <div class="modal-body support-choice" id="support-choice">
+          <button type="button" class="choice-card choice-bug" data-support-mode="bug">
+            <span class="choice-icon">!</span>
+            <span>
+              <span class="choice-title">Something's broken</span>
+              <span class="choice-hint">It errored, didn't select or restore, or didn't do what it said.</span>
+            </span>
+          </button>
+          <button type="button" class="choice-card choice-feature" data-support-mode="feature">
+            <span class="choice-icon">+</span>
+            <span>
+              <span class="choice-title">Something's missing</span>
+              <span class="choice-hint">An idea, or a step that takes longer than it should.</span>
+            </span>
+          </button>
+        </div>
+
+        <!-- Step 2: the report -->
+        <form class="support-form" id="support-form" hidden novalidate>
+          <div class="modal-body support-fields">
+            <div class="field">
+              <label for="support-title" class="field-label">Title <span class="required">*</span></label>
+              <input id="support-title" class="field-input" maxlength="200" autocomplete="off" />
+            </div>
+
+            <div class="field">
+              <label for="support-description" class="field-label">Details</label>
+              <textarea id="support-description" class="field-input" rows="4"></textarea>
+            </div>
+
+            <div class="field">
+              <div class="field-row">
+                <span class="field-label">Screenshots or logs <span class="field-optional">&middot; optional</span></span>
+                <label class="attach-link" id="support-attach-label">
+                  <span id="support-attach-text">Attach a file</span>
+                  <input type="file" id="support-files" multiple hidden
+                    accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.txt,.log,.csv,.json,.har" />
+                </label>
+              </div>
+              <ul class="file-list" id="support-file-list"></ul>
+              <p class="field-error" id="support-file-error" hidden></p>
+            </div>
+
+            <div class="field" id="support-severity-field">
+              <span class="field-label">How bad is it?</span>
+              <div class="severity-group" id="support-severity">
+                <button type="button" class="severity-btn" data-severity="low">Low</button>
+                <button type="button" class="severity-btn active" data-severity="medium">Medium</button>
+                <button type="button" class="severity-btn" data-severity="high">High</button>
+                <button type="button" class="severity-btn" data-severity="critical">Critical</button>
+              </div>
+              <p class="field-hint" id="support-severity-hint"></p>
+            </div>
+
+            <label class="check-card" id="support-urgent-field" hidden>
+              <input type="checkbox" id="support-urgent" />
+              <span>
+                <span class="check-title">Mark as urgent</span>
+                <span class="check-hint">Flags it for immediate attention. Use it when this is blocking a restore.</span>
+              </span>
+            </label>
+
+            <div class="field">
+              <label for="support-email" class="field-label">Your email <span class="field-optional">&middot; optional</span></label>
+              <input id="support-email" type="email" class="field-input" autocomplete="email" placeholder="you@example.com" />
+              <p class="field-hint">Only used to tell you what happens with this report. Leave blank to send anonymously.</p>
+            </div>
+
+            <label class="check-card">
+              <input type="checkbox" id="support-include-log" checked />
+              <span>
+                <span class="check-title">Include the activity log</span>
+                <span class="check-hint">Exactly what's in the Log panel: the steps taken, counts and any errors. No file names or Apple ID details.</span>
+              </span>
+            </label>
+
+            <p class="field-error" id="support-error" hidden></p>
+          </div>
+
+          <div class="support-footer">
+            <div class="support-buttons">
+              <button type="button" class="btn" id="support-back">Back</button>
+              <button type="submit" class="btn btn-primary" id="support-submit" disabled>Submit</button>
+            </div>
+            <p class="support-note">
+              Sent with your app and macOS version.
+              <button type="button" class="link-button" data-open-privacy>What we send</button>
+            </p>
+          </div>
+        </form>
+
+        <!-- Step 3: sent -->
+        <div class="modal-body support-done" id="support-done" hidden>
+          <div class="update-icon">&#10003;</div>
+          <h2 id="support-done-title">Thanks, that's been sent.</h2>
+          <p class="update-text" id="support-done-text"></p>
+          <button type="button" class="btn btn-primary" id="support-done-close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Privacy Modal -->
+    <div class="modal-overlay" id="modal-privacy">
+      <div class="modal modal-privacy" role="dialog" aria-labelledby="privacy-heading">
+        <div class="modal-header">
+          <h2 id="privacy-heading">Privacy</h2>
+          <button class="modal-close" id="close-privacy" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body privacy-body">
+          <p class="privacy-lead">
+            iRevive doesn't collect, track or sell anything about you. There are no accounts,
+            no analytics and no ads.
+          </p>
+
+          <h3>Your Apple ID and files</h3>
+          <p>
+            You sign in on Apple's own iCloud page, inside the iCloud window. iRevive never sees
+            your password, your 2FA codes, your files or the file list. All it does in that window
+            is tick checkboxes and click the Restore and OK buttons for you. Apple's privacy policy
+            covers that page.
+          </p>
+
+          <h3>What stays on your Mac</h3>
+          <ul>
+            <li>Apple's sign-in cookies, kept in the app's web storage just like Safari would, so you may stay signed in between launches.</li>
+            <li>The log and counters, which live in memory only and are gone when you quit.</li>
+          </ul>
+
+          <div class="clear-data">
+            <div>
+              <span class="clear-data-title">Sign out and clear data</span>
+              <span class="clear-data-hint" id="clear-data-hint">Deletes Apple's cookies, cache and saved site data from iRevive. You'll sign in again next time.</span>
+            </div>
+            <button type="button" class="btn btn-clear-data" id="btn-clear-data">Clear</button>
+          </div>
+
+          <h3>When iRevive goes online</h3>
+          <ul>
+            <li><strong>icloud.com</strong>: the page you're using to restore.</li>
+            <li><strong>GitHub</strong>: once at launch, to check for updates. GitHub sees your IP address, as it would for any download. Nothing else is sent.</li>
+            <li><strong>Links</strong> to Stripe (donations) and gilroy.digital open in your own browser, and only when you click them.</li>
+          </ul>
+
+          <h3>Reports</h3>
+          <p>
+            Nothing is sent unless you fill in the Report form and press Submit. It then goes to
+            Gilroy Digital's ticket system and includes:
+          </p>
+          <ul>
+            <li>The title, details and any files you attach.</li>
+            <li>Your email, if you give one, used only to update you on that report.</li>
+            <li>Your iRevive version and macOS version.</li>
+            <li>The activity log, if you leave that box ticked.</li>
+          </ul>
+          <p>
+            Reports are only used to fix problems and improve iRevive. They're never shared, sold or
+            used for marketing. To have a report deleted, email
+            <a href="mailto:leon@gilroy.digital" class="privacy-link" data-external>leon@gilroy.digital</a>.
+          </p>
+
+          <p class="privacy-meta">
+            iRevive is made by Leon Gilroy, Gilroy Digital. Questions:
+            <a href="mailto:leon@gilroy.digital" class="privacy-link" data-external>leon@gilroy.digital</a>.
+            Last updated 13 September 2026.
+          </p>
         </div>
       </div>
     </div>

@@ -1025,3 +1025,520 @@ body {
 .mail-link:hover {
   color: var(--accent);
 }
+
+/* ── Shared bits ───────────────────────────────────────── */
+
+[hidden] {
+  display: none !important;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.brand-links {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: -2px;
+}
+
+.brand-links .brand-link {
+  margin-top: 0;
+}
+
+/* .link-button's font: inherit would otherwise make these bigger than the link beside them. */
+.link-button.brand-link {
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.link-button.brand-link:disabled {
+  cursor: default;
+  color: var(--text-muted);
+}
+
+.brand-sep {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.modal-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.modal-header {
+  align-items: flex-start;
+}
+
+/* ── Support Modal ─────────────────────────────────────── */
+
+.modal-support {
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.support-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.choice-bug:hover {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(248, 113, 113, 0.06);
+}
+
+.choice-feature:hover {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.choice-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.choice-bug .choice-icon {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--red);
+}
+
+.choice-feature .choice-icon {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--yellow);
+}
+
+.choice-title {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.choice-hint {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.support-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+/* Fields scroll; the Submit row stays put. */
+.support-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.field-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.required {
+  color: var(--red);
+}
+
+.field-optional {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-family: inherit;
+  resize: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field-input::placeholder {
+  color: var(--text-muted);
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.field-hint {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.field-error {
+  font-size: 0.78rem;
+  color: var(--red);
+  line-height: 1.4;
+}
+
+.field .field-error {
+  margin-top: 6px;
+}
+
+.attach-link {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.attach-link:hover {
+  color: var(--accent-hover);
+}
+
+.file-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px 5px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.78rem;
+}
+
+.file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.file-size {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.file-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.file-remove:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.severity-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.severity-btn {
+  padding: 7px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.severity-btn:hover {
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.severity-btn.active {
+  background: rgba(175, 82, 222, 0.14);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+.check-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.check-card input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.check-title {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.check-hint {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.support-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+
+.support-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 14px 24px 10px;
+}
+
+.support-buttons .btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.support-note {
+  padding: 0 24px 14px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.support-note .link-button {
+  color: var(--accent);
+}
+
+.support-note .link-button:hover {
+  color: var(--accent-hover);
+}
+
+.support-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 28px;
+  text-align: center;
+}
+
+.support-done h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.support-done .btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* ── Privacy Modal ─────────────────────────────────────── */
+
+.privacy-body {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.privacy-lead {
+  padding: 12px 16px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.privacy-body h3 {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 20px 0 6px;
+}
+
+.privacy-body ul {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.privacy-body ul + p,
+.privacy-body p + ul {
+  margin-top: 8px;
+}
+
+.privacy-body strong {
+  color: var(--text-primary);
+}
+
+.privacy-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.privacy-link:hover {
+  color: var(--accent-hover);
+}
+
+.clear-data {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.clear-data > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.clear-data-title {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.clear-data-hint {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.btn-clear-data {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+}
+
+.btn-clear-data.confirming {
+  background: rgba(248, 113, 113, 0.14);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.privacy-meta {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+/* ── Apple Error Modal ─────────────────────────────────── */
+
+.modal-apple-error {
+  max-width: 420px;
+}
+
+.apple-error-icon {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--yellow);
+  font-weight: 800;
+}
+
+.apple-error-check {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: left;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.apple-error-check strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.apple-error-close {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.apple-error-close:hover {
+  color: var(--text-secondary);
+}

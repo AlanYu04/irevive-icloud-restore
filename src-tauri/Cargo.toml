@@ -1,6 +1,6 @@
 [package]
 name = "icloud-restore-gui"
-version = "0.1.0"
+version = "0.3.9"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -23,6 +23,11 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-process = "2"
+# Support tickets. Same reqwest and rustls (ring) the updater already pulls in,
+# so this adds multipart and nothing else to the build.
+reqwest = { version = "0.13", default-features = false, features = ["json", "multipart", "http2", "rustls-no-provider"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+base64 = "0.22"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
