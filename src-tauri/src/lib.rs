@@ -24,6 +24,9 @@ fn fire_js(app_handle: &tauri::AppHandle, js_code: &str) -> Result<(), String> {
                 try {{ window.__TAURI_INTERNALS__.invoke("icloud_report", {{ report: r }}); }}
                 catch (e) {{ console.error("iRevive report failed:", e); }}
             }};
+            // Anything started before the user pressed Cancel stops early.
+            const startedAt = Date.now();
+            const cancelled = () => (window.__ireviveCancelAt || 0) > startedAt;
             try {{ {js_code} }} catch(e) {{ console.error("iRevive error:", e); }}
         }})();"#,
     );
@@ -98,10 +101,15 @@ const PAGE_HELPERS: &str = r#"
         return [];
     };
 
-    const selectedCount = () =>
-        document.querySelectorAll('input[type="checkbox"]:checked').length ||
-        document.querySelectorAll('[role="checkbox"][aria-checked="true"]').length ||
-        document.querySelectorAll('[role="row"][aria-selected="true"]').length;
+    const selectedEls = () => {
+        for (const sel of ['input[type="checkbox"]:checked', '[role="checkbox"][aria-checked="true"]', '[role="row"][aria-selected="true"]']) {
+            const els = document.querySelectorAll(sel);
+            if (els.length) return Array.from(els);
+        }
+        return [];
+    };
+
+    const selectedCount = () => selectedEls().length;
 
     // Apple's "There was a problem loading all restorable files. Try Again",
     // shown when its server fails to list deleted files (HTTP 500). Returns
@@ -153,6 +161,7 @@ async fn select_batch(
         let sawAppleError = false;
         while (Date.now() - started < {wait_ms}) {{
             await delay(1000);
+            if (cancelled()) break;
             const retry = appleErrorRetry();
             if (retry) sawAppleError = true;
             if (retry && Date.now() - lastRetry >= 20000) {{
@@ -179,6 +188,7 @@ async fn select_batch(
         const before = selectedCount();
         let clicked = 0;
         for (const el of unselected().slice(0, limit)) {{
+            if (cancelled()) break;
             if (!el.isConnected) continue;
             el.scrollIntoView({{ block: "center" }});
             el.click();
@@ -196,6 +206,7 @@ async fn select_batch(
             total_selected: selectedCount(),
             waited_ms: waited,
             retries,
+            cancelled: cancelled(),
             apple_error: !!appleErrorRetry() || (sawAppleError && loaded === 0),
         }});
         "#,
@@ -277,8 +288,39 @@ async fn click_restore(app_handle: tauri::AppHandle, request_id: u64) -> Result<
     Ok(json!({"ok": true, "status": "Restore/confirm clicked"}))
 }
 
+/// Unticks everything currently selected on the page, so the user can start the
+/// batch again without reloading iCloud.
+#[tauri::command]
+async fn deselect_all(app_handle: tauri::AppHandle, request_id: u64) -> Result<Value, String> {
+    let js = format!(
+        r#"
+        {PAGE_HELPERS}
+        const before = selectedCount();
+        let clicked = 0;
+        for (const el of selectedEls()) {{
+            if (cancelled()) break;
+            if (!el.isConnected) continue;
+            el.scrollIntoView({{ block: "center" }});
+            el.click();
+            clicked++;
+            if (clicked % 10 === 0) await delay(5);
+        }}
+        await delay(300);
+        report({{
+            kind: "deselect",
+            id: {request_id},
+            cleared: Math.max(0, before - selectedCount()),
+            still_selected: selectedCount(),
+        }});
+        "#,
+    );
+    fire_js(&app_handle, &js)?;
+    Ok(json!({"ok": true}))
+}
+
 /// A read-only look at the iCloud page, run while iRevive is idle: whether
-/// Apple's loading error is showing, and how many items are there to select.
+/// Apple's loading error is showing, how many items are there to select, and
+/// how many are ticked (which the user may have done by hand).
 #[tauri::command]
 async fn check_icloud(app_handle: tauri::AppHandle, request_id: u64) -> Result<(), String> {
     let js = format!(
@@ -289,10 +331,22 @@ async fn check_icloud(app_handle: tauri::AppHandle, request_id: u64) -> Result<(
             id: {request_id},
             apple_error: !!appleErrorRetry(),
             loaded: unselected().length,
+            selected: selectedCount(),
         }});
         "#,
     );
     fire_js(&app_handle, &js)
+}
+
+/// Tells anything already running in the iCloud window to stop where it is.
+/// Scripts check this between steps, so a long wait ends promptly.
+#[tauri::command]
+async fn cancel_icloud(app_handle: tauri::AppHandle) -> Result<(), String> {
+    let win = app_handle
+        .get_webview_window("icloud")
+        .ok_or("iCloud window not open.")?;
+    win.eval("window.__ireviveCancelAt = Date.now()")
+        .map_err(|e| e.to_string())
 }
 
 /// Receives `report(...)` calls from scripts running in the iCloud window and
@@ -355,6 +409,20 @@ async fn clear_browsing_data(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            // Open as tall as the screen allows. The work area leaves out the
+            // menu bar and Dock, so nothing ends up underneath them.
+            if let Some(win) = app.get_webview_window("main") {
+                if let (Ok(Some(monitor)), Ok(size), Ok(pos)) =
+                    (win.current_monitor(), win.outer_size(), win.outer_position())
+                {
+                    let area = monitor.work_area();
+                    let _ = win.set_size(tauri::PhysicalSize::new(size.width, area.size.height));
+                    let _ = win.set_position(tauri::PhysicalPosition::new(pos.x, area.position.y));
+                }
+            }
+            Ok(())
+        })
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
@@ -367,6 +435,8 @@ pub fn run() {
             click_restore,
             icloud_report,
             check_icloud,
+            deselect_all,
+            cancel_icloud,
             close_icloud_window,
             clear_browsing_data,
             tickets::submit_ticket,

@@ -31,3 +31,6 @@ TICKETS.md
 
 # Javelin writes this on every release
 javelin-manifest-*.json
+
+# Internal docs, not for the public repo
+docs/

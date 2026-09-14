@@ -15,10 +15,14 @@ const countRestored = () => document.getElementById("count-restored");
 const btnLaunch = () => document.getElementById("btn-launch");
 const btnSelect = () => document.getElementById("btn-select");
 const btnRestore = () => document.getElementById("btn-restore");
+const btnDeselect = () => document.getElementById("btn-deselect");
 const btnClearLog = () => document.getElementById("btn-clear-log");
 const btnAuto = () => document.getElementById("btn-auto");
 
 // ── State ───────────────────────────────────────────────────
+
+// Oldest lines are dropped past this, so a long Auto Mode run stays responsive.
+const LOG_MAX_ENTRIES = 500;
 
 let browserLaunched = false;
 let totalRestored = 0;
@@ -102,11 +106,16 @@ function selectInICloud(count, waitMs, settleMs, maxRetries) {
 
 /** Logs a selection report and updates the Selected counter. */
 function logSelection(report, count, prefix = "") {
+  if (report?.cancelled) {
+    setSelected(report.total_selected, false);
+    log(`${prefix}Stopped. ${report.selected} items were selected before you cancelled.`, "warn");
+    return;
+  }
   if (!report) {
     log(`${prefix}Selection sent, but iRevive couldn't read how many were ticked. Check the iCloud window.`, "warn");
     return;
   }
-  updateCounters(report.total_selected, null);
+  setSelected(report.total_selected, false);
   if (report.retries > 0) {
     log(`${prefix}iCloud failed to load the file list. Clicked Try Again ${report.retries === 1 ? "once" : `${report.retries} times`}.`, "warn");
   }
@@ -141,13 +150,15 @@ async function restoreInICloud(prefix = "") {
     case "restore":
       if (report.selected > 0) {
         totalRestored += report.selected;
-        updateCounters(0, totalRestored);
+        setSelected(0, true);
+        updateCounters(null, totalRestored);
         log(`${prefix}Restore clicked for ${report.selected} items. Total: ${totalRestored}`, "success");
       } else {
         log(`${prefix}Restore clicked, but no items were selected.`, "warn");
       }
       break;
     case "confirm":
+      setSelected(0, false);
       log(`${prefix}Confirmation closed.`, "success");
       break;
     case "disabled":
@@ -175,6 +186,8 @@ function log(message, level = "") {
 
   entry.innerHTML = `<span class="log-time">${time}</span>${escapeHtml(String(message))}`;
   area.appendChild(entry);
+  // An overnight run would otherwise pile up thousands of lines.
+  while (area.children.length > LOG_MAX_ENTRIES) area.removeChild(area.firstChild);
   area.scrollTop = area.scrollHeight;
 }
 
@@ -205,6 +218,59 @@ function enableActionButtons(enabled) {
   btnSelect().disabled = !enabled;
   btnRestore().disabled = !enabled;
   btnAuto().disabled = !enabled;
+  btnDeselect().disabled = !enabled || selectedNow === 0;
+}
+
+// How many items iCloud currently has ticked. Drives the Selected counter, the
+// Deselect all button, and which step is highlighted as the one to press next.
+let selectedNow = 0;
+// A restore was clicked and iCloud's confirmation hasn't been dealt with yet,
+// so step 2 stays highlighted even though nothing is selected any more.
+let awaitingConfirm = false;
+
+function setSelected(count, confirmPending = awaitingConfirm) {
+  selectedNow = Math.max(0, count || 0);
+  awaitingConfirm = confirmPending;
+  updateCounters(selectedNow, null);
+  document
+    .getElementById("panel-manual")
+    .setAttribute("data-stage", selectedNow > 0 || awaitingConfirm ? "restore" : "select");
+  btnDeselect().disabled = selectedNow === 0 || !browserLaunched || autoModeActive;
+}
+
+async function deselectAll() {
+  icloudBusy = true;
+  try {
+    log("Clearing the selection...");
+    const report = await invokeWithReport("deselect_all", {}, 60 * 1000);
+    if (!report) {
+      log("Sent, but iRevive couldn't read how many were cleared. Check the iCloud window.", "warn");
+      return;
+    }
+    setSelected(report.still_selected, false);
+    log(`Deselected ${report.cleared} items.`, "success");
+  } catch (err) {
+    log(`Deselect failed: ${err}`, "error");
+  } finally {
+    icloudBusy = false;
+  }
+}
+
+function initTabs() {
+  const tabs = [
+    [document.getElementById("tab-manual"), document.getElementById("panel-manual")],
+    [document.getElementById("tab-auto"), document.getElementById("panel-auto")],
+  ];
+  tabs.forEach(([tab]) => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(([t, panel]) => {
+        const on = t === tab;
+        t.classList.toggle("active", on);
+        t.setAttribute("aria-selected", String(on));
+        panel.hidden = !on;
+      });
+    });
+  });
 }
 
 function showLoader(on) {
@@ -238,12 +304,19 @@ async function launchBrowser() {
 }
 
 async function selectBatch() {
+  // While selecting, the same button cancels: the wait for iCloud's list can
+  // run to 30s, and nobody wants to sit through it by mistake.
+  if (icloudBusy) {
+    cancelICloud();
+    return;
+  }
   const count = parseInt(document.getElementById("batch-size").value) || 500;
   icloudBusy = true;
   try {
     setStatus("working", `Selecting ${count}...`);
     showLoader(true);
     enableActionButtons(false);
+    setSelectAsCancel(true);
     log(`Selecting up to ${count} items...`);
     logSelection(await selectInICloud(count, MANUAL_LIST_WAIT_MS, MANUAL_SETTLE_MS, MANUAL_RETRIES), count);
   } catch (err) {
@@ -253,6 +326,31 @@ async function selectBatch() {
     setStatus("connected", "Connected");
     showLoader(false);
     enableActionButtons(true);
+    setSelectAsCancel(false);
+  }
+}
+
+function setSelectAsCancel(cancelling) {
+  const btn = btnSelect();
+  btn.innerHTML = cancelling
+    ? "Cancel"
+    : '<span class="step-badge">1</span>Select';
+  btn.disabled = false;
+  btn.classList.toggle("btn-cancelling", cancelling);
+}
+
+/** Stops whatever iRevive is running inside the iCloud window. */
+async function cancelICloud() {
+  const btn = btnSelect();
+  if (btn.classList.contains("btn-cancelling")) {
+    btn.textContent = "Stopping...";
+    btn.disabled = true;
+  }
+  try {
+    await invoke("cancel_icloud");
+    log("Stopping...", "warn");
+  } catch (err) {
+    log(`Couldn't stop that: ${err}`, "error");
   }
 }
 
@@ -294,6 +392,7 @@ function startAutoMode() {
   btnAuto().classList.add("active");
   btnSelect().disabled = true;
   btnRestore().disabled = true;
+  btnDeselect().disabled = true;
   const waitMins = (getAutoWaitMs() / 60000);
   log(`Auto mode started. Will cycle: Wait for iCloud to load → Select → Wait ${waitMins}m → Restore → Wait ${waitMins}m → Repeat`, "info");
   runAutoCycle();
@@ -301,6 +400,7 @@ function startAutoMode() {
 
 function stopAutoMode() {
   autoModeActive = false;
+  if (browserLaunched) cancelICloud();
   clearInterval(autoTimerInterval);
   clearTimeout(autoTimeoutId);
   autoTimerInterval = null;
@@ -312,6 +412,7 @@ function stopAutoMode() {
   if (browserLaunched) {
     btnSelect().disabled = false;
     btnRestore().disabled = false;
+    btnDeselect().disabled = selectedNow === 0;
   }
   showLoader(false);
   setStatus("connected", "Connected");
@@ -467,6 +568,8 @@ window.addEventListener("DOMContentLoaded", () => {
   btnSelect().addEventListener("click", selectBatch);
   btnRestore().addEventListener("click", clickRestore);
   btnAuto().addEventListener("click", toggleAutoMode);
+  btnDeselect().addEventListener("click", deselectAll);
+  initTabs();
   btnClearLog().addEventListener("click", () => {
     logArea().innerHTML = "";
   });
@@ -477,8 +580,9 @@ window.addEventListener("DOMContentLoaded", () => {
     modalWelcome.classList.remove("active");
   });
 
-  // Open external links in welcome screen
-  modalWelcome.querySelectorAll(".donate-link, .brand-link, .mail-link").forEach((link) => {
+  // Open external links in welcome screen. Anchors only: buttons share these
+  // classes for styling and have no href to open.
+  modalWelcome.querySelectorAll("a.donate-link, a.brand-link, a.mail-link").forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       openUrl(link.href);
@@ -500,7 +604,7 @@ document.getElementById("close-help").addEventListener("click", () => {
   });
 
   // Open external links in system browser
-  document.querySelectorAll(".donate-link, .brand-link").forEach((link) => {
+  document.querySelectorAll("a.donate-link, a.brand-link").forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       openUrl(link.href);
@@ -542,6 +646,15 @@ document.getElementById("close-help").addEventListener("click", () => {
   const autoSliderValue = document.getElementById("auto-slider-value");
   autoSlider.addEventListener("input", () => {
     autoSliderValue.textContent = `${autoSlider.value} min`;
+  });
+
+  // Escape closes the topmost open modal.
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const open = [...document.querySelectorAll(".modal-overlay.active")].pop();
+    if (!open) return;
+    if (open.id === "modal-support") closeSupport();
+    else if (open.id !== "modal-welcome") open.classList.remove("active");
   });
 
   setStatus("disconnected", "Disconnected");
@@ -596,6 +709,8 @@ async function checkICloudIdle() {
   } else if (report.loaded > 0) {
     appleErrorShown = false;
   }
+  // The user may have ticked or cleared items in the iCloud window themselves.
+  if (report.selected !== selectedNow) setSelected(report.selected, report.selected > 0 ? false : awaitingConfirm);
 }
 
 function initAppleError() {
@@ -686,11 +801,29 @@ const SEVERITY_HINTS = {
 };
 
 const support = {
-  mode: null, // "bug" | "feature"
+  mode: null, // "bug" | "feature" | "feedback"
   severity: "medium",
+  rating: 0, // feedback only, 0 = not given
   files: [],
   sending: false,
 };
+
+const RATING_HINTS = {
+  0: "Optional",
+  1: "Sorry to hear it",
+  2: "Not great",
+  3: "Did the job",
+  4: "Happy with it",
+  5: "Couldn't be better",
+};
+
+function setRating(value) {
+  support.rating = value;
+  document.querySelectorAll("#support-rating .star").forEach((star) => {
+    star.classList.toggle("lit", Number(star.dataset.rating) <= value);
+  });
+  $("support-rating-hint").textContent = RATING_HINTS[value];
+}
 
 const $ = (id) => document.getElementById(id);
 
@@ -783,14 +916,29 @@ function showSupportStep(step) {
     sub.textContent = "Goes straight to the person who can fix it.";
   } else if (step === "form") {
     const bug = support.mode === "bug";
-    heading.textContent = bug ? "Report a Bug" : "Request a Feature";
-    sub.textContent = "We'll take a look as soon as we can.";
-    $("support-title").placeholder = bug ? "What went wrong?" : "What would you like to see?";
-    $("support-description").placeholder = bug
-      ? "What you did, what you expected, and what happened instead."
-      : "Describe the feature...";
+    const feedback = support.mode === "feedback";
+    heading.textContent = feedback ? "Leave Feedback" : bug ? "Report a Bug" : "Request a Feature";
+    sub.textContent = feedback
+      ? "Read by Leon, who built this."
+      : "We'll take a look as soon as we can.";
+    $("support-title").placeholder = feedback
+      ? "Sum it up in a line"
+      : bug
+        ? "What went wrong?"
+        : "What would you like to see?";
+    $("support-description").placeholder = feedback
+      ? "How did the restore go? Anything that stood out?"
+      : bug
+        ? "What you did, what you expected, and what happened instead."
+        : "Describe the feature...";
     $("support-severity-field").hidden = !bug;
-    $("support-urgent-field").hidden = bug;
+    $("support-urgent-field").hidden = bug || feedback;
+    $("support-rating-field").hidden = !feedback;
+    // Praise doesn't need evidence attached.
+    $("support-files-field").hidden = feedback;
+    $("support-log-field").hidden = feedback;
+    $("support-publish-field").hidden = !feedback;
+    $("support-attribution-field").hidden = !feedback || !$("support-can-publish").checked;
     setTimeout(() => $("support-title").focus(), 0);
   }
   $("support-header").hidden = step === "done";
@@ -803,6 +951,7 @@ function resetSupport() {
   $("support-form").reset();
   $("support-include-log").checked = true;
   setSeverity("medium");
+  setRating(0);
   renderSupportFiles();
   showSupportError($("support-file-error"), null);
   showSupportError($("support-error"), null);
@@ -846,19 +995,31 @@ async function submitSupport(e) {
         description: $("support-description").value.trim(),
         severity: support.severity,
         is_urgent: $("support-urgent").checked,
+        rating: support.rating || null,
+        can_publish: $("support-can-publish").checked,
+        // Only sent with consent: without it there's nothing to credit.
+        attribution: $("support-can-publish").checked
+          ? $("support-attribution").value.trim() || null
+          : null,
         email: email || null,
-        log: includeLog ? logArea().innerText : null,
+        log: includeLog && support.mode !== "feedback" ? logArea().innerText : null,
         attachments,
       },
     });
 
     const ref = result?.id ? ` (ticket #${result.id})` : "";
-    const bug = support.mode === "bug";
-    $("support-done-title").textContent = bug ? "Bug reported. Thank you." : "Feature request sent.";
+    const kind = support.mode;
+    const label = kind === "bug" ? "Bug report" : kind === "feature" ? "Feature request" : "Feedback";
+    $("support-done-title").textContent =
+      kind === "bug"
+        ? "Bug reported. Thank you."
+        : kind === "feature"
+          ? "Feature request sent."
+          : "Thank you, that means a lot.";
     $("support-done-text").textContent = email
       ? `We'll email ${email} with any updates${ref}.`
-      : `Your report was sent anonymously${ref}.`;
-    log(`${bug ? "Bug report" : "Feature request"} sent${ref}.`, "success");
+      : `Your ${kind === "feedback" ? "message" : "report"} was sent anonymously${ref}.`;
+    log(`${label} sent${ref}.`, "success");
     support.sending = false;
     showSupportStep("done");
   } catch (err) {
@@ -903,6 +1064,17 @@ function initSupport() {
 
   document.querySelectorAll("#support-severity .severity-btn").forEach((btn) => {
     btn.addEventListener("click", () => setSeverity(btn.dataset.severity));
+  });
+
+  document.querySelectorAll("#support-rating .star").forEach((star) => {
+    const value = Number(star.dataset.rating);
+    // Clicking the current rating clears it, since it's optional.
+    star.addEventListener("click", () => setRating(support.rating === value ? 0 : value));
+  });
+
+  // Naming yourself only matters if the quote can be published.
+  $("support-can-publish").addEventListener("change", (e) => {
+    $("support-attribution-field").hidden = !e.target.checked;
   });
 
   $("support-title").addEventListener("input", updateSupportSubmit);

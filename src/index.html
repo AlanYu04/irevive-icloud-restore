@@ -11,31 +11,24 @@
   <body>
     <main class="container">
       <header class="app-header">
-        <div class="brand">
-          <img src="assets/logo.svg" alt="iRevive" class="app-logo" />
-          <div class="brand-text">
+        <div class="header-top">
+          <div class="brand">
+            <img src="assets/logo.svg" alt="iRevive" class="app-logo" />
             <h1 class="app-title">
               <span class="title-icon">i</span>Revive <span class="version-label" id="app-version"></span>
-              <span class="tagline">For when iCloud Restore messes you about.</span>
             </h1>
-            <div class="brand-links">
-              <a href="https://gilroy.digital" target="_blank" rel="noopener noreferrer" class="brand-link" id="brand-link">gilroy.digital</a>
-              <span class="brand-sep">&middot;</span>
-              <button type="button" class="link-button brand-link" data-open-privacy>Privacy</button>
-              <span class="brand-sep">&middot;</span>
-              <button type="button" class="link-button brand-link" id="btn-check-updates">Check for updates</button>
-            </div>
           </div>
-        </div>
-        <div class="header-right">
+          <div class="header-right">
           <button id="btn-help" class="btn-icon" title="How to use">Instructions</button>
-          <button id="btn-support" class="btn-icon" title="Report a problem or suggest a feature">Report</button>
+          <button id="btn-support" class="btn-icon" title="Report a problem, suggest a feature or leave feedback">Feedback</button>
           <button id="btn-donate" class="btn-icon btn-donate-icon" title="Donate">Donate</button>
           <div class="status-bar">
             <span class="status-dot" id="status-dot"></span>
             <span class="status-text" id="status-text">Disconnected</span>
+            </div>
           </div>
         </div>
+        <p class="tagline">For when iCloud Restore messes you about.</p>
       </header>
 
       <section class="counters" id="counters-normal">
@@ -58,11 +51,25 @@
 
       <section class="controls">
         <button id="btn-launch" class="btn btn-primary">Open iCloud</button>
+      </section>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" id="tab-manual" role="tab" aria-selected="true" aria-controls="panel-manual">Manual</button>
+        <button class="tab" id="tab-auto" role="tab" aria-selected="false" aria-controls="panel-auto">Auto Mode</button>
+      </div>
+
+      <!-- data-stage moves the filled highlight from Select to Restore, so the
+           order to press them is obvious. -->
+      <section class="controls tab-panel" id="panel-manual" role="tabpanel" data-stage="select">
         <div class="batch-control">
-          <button id="btn-select" class="btn" disabled>Select</button>
+          <button id="btn-select" class="btn" disabled><span class="step-badge">1</span>Select</button>
           <input type="number" id="batch-size" class="batch-input" value="500" min="1" max="5000" step="50" />
         </div>
-        <button id="btn-restore" class="btn btn-accent" disabled>Restore / Confirm</button>
+        <button id="btn-restore" class="btn" disabled><span class="step-badge">2</span>Restore / Confirm</button>
+        <button id="btn-deselect" class="btn btn-quiet" disabled>Deselect all</button>
+      </section>
+
+      <section class="controls tab-panel" id="panel-auto" role="tabpanel" hidden>
         <div class="auto-control">
           <button id="btn-auto" class="btn btn-auto" disabled>Auto Mode</button>
           <div class="auto-slider-wrap">
@@ -70,6 +77,7 @@
             <span class="auto-slider-value" id="auto-slider-value">5 min</span>
           </div>
         </div>
+        <p class="auto-hint">Selects, waits, restores and repeats until you stop it. Wait time is how long it pauses after each step.</p>
       </section>
 
       <div class="auto-timer-bar" id="auto-timer-bar">
@@ -86,6 +94,14 @@
         </div>
         <div class="log-area" id="log-area"></div>
       </section>
+
+      <footer class="app-footer">
+        <a href="https://gilroy.digital" target="_blank" rel="noopener noreferrer" class="brand-link" id="brand-link">gilroy.digital</a>
+        <span class="brand-sep">&middot;</span>
+        <button type="button" class="link-button brand-link" data-open-privacy>Privacy</button>
+        <span class="brand-sep">&middot;</span>
+        <button type="button" class="link-button brand-link" id="btn-check-updates">Check for updates</button>
+      </footer>
     </main>
 
     <!-- Help Modal -->
@@ -122,14 +138,14 @@
               <span class="step-num">4</span>
               <div>
                 <strong>Select Items</strong>
-                <p>Set your batch size (default 500) and click "Select" to automatically check that many unchecked items.</p>
+                <p>On the <strong>Manual</strong> tab, set your batch size (default 500) and click "1 Select". iRevive waits for the list to finish loading, then ticks that many items and tells you how many it managed. "Deselect all" clears them again.</p>
               </div>
             </div>
             <div class="help-step">
               <span class="step-num">5</span>
               <div>
                 <strong>Restore / Confirm</strong>
-                <p>Click "Restore / Confirm" to click the Restore button. After the restore completes, click it again to dismiss the confirmation dialog.</p>
+                <p>Click "2 Restore / Confirm" to press iCloud's Restore button. The highlighted step is always the one to press next, so follow the purple one. After the restore finishes, press it again to dismiss iCloud's confirmation.</p>
               </div>
             </div>
             <div class="help-step">
@@ -144,7 +160,7 @@
               <span class="step-num">A</span>
               <div>
                 <strong>Auto Mode</strong>
-                <p>Click "Auto Mode" to run hands-free overnight. Set the wait time (default 5 min) using the input next to the button. Each cycle waits for iCloud to finish loading, selects items, waits, clicks restore, waits again, and repeats. A countdown bar shows time until the next action. Click "Stop Auto" to stop at any time.</p>
+                <p>Open the Auto Mode tab and click "Auto Mode" to run hands-free overnight. Set the wait time (default 5 min) using the input next to the button. Each cycle waits for iCloud to finish loading, selects items, waits, clicks restore, waits again, and repeats. A countdown bar shows time until the next action. Click "Stop Auto" to stop at any time.</p>
               </div>
             </div>
           </div>
@@ -255,7 +271,7 @@
           </div>
           <div class="update-buttons">
             <button id="btn-apple-error-browser" class="btn">Open in Browser</button>
-            <button id="btn-apple-error-report" class="btn btn-primary">Report</button>
+            <button id="btn-apple-error-report" class="btn btn-primary">Send feedback</button>
           </div>
           <button type="button" class="link-button apple-error-close" id="btn-apple-error-close">Close</button>
         </div>
@@ -302,6 +318,13 @@
               <span class="choice-hint">An idea, or a step that takes longer than it should.</span>
             </span>
           </button>
+          <button type="button" class="choice-card choice-feedback" data-support-mode="feedback">
+            <span class="choice-icon">&#9733;</span>
+            <span>
+              <span class="choice-title">Something's good</span>
+              <span class="choice-hint">Tell us how it went. Kind words keep this thing going.</span>
+            </span>
+          </button>
         </div>
 
         <!-- Step 2: the report -->
@@ -317,7 +340,7 @@
               <textarea id="support-description" class="field-input" rows="4"></textarea>
             </div>
 
-            <div class="field">
+            <div class="field" id="support-files-field">
               <div class="field-row">
                 <span class="field-label">Screenshots or logs <span class="field-optional">&middot; optional</span></span>
                 <label class="attach-link" id="support-attach-label">
@@ -349,13 +372,39 @@
               </span>
             </label>
 
+            <div class="field" id="support-rating-field" hidden>
+              <span class="field-label">How did it go?</span>
+              <div class="rating" id="support-rating" role="radiogroup" aria-label="Rating">
+                <button type="button" class="star" data-rating="1" aria-label="1 star">&#9733;</button>
+                <button type="button" class="star" data-rating="2" aria-label="2 stars">&#9733;</button>
+                <button type="button" class="star" data-rating="3" aria-label="3 stars">&#9733;</button>
+                <button type="button" class="star" data-rating="4" aria-label="4 stars">&#9733;</button>
+                <button type="button" class="star" data-rating="5" aria-label="5 stars">&#9733;</button>
+                <span class="rating-hint" id="support-rating-hint">Optional</span>
+              </div>
+            </div>
+
+            <label class="check-card" id="support-publish-field" hidden>
+              <input type="checkbox" id="support-can-publish" />
+              <span>
+                <span class="check-title">You can quote me</span>
+                <span class="check-hint">Lets Gilroy Digital use your words publicly, for example on the iRevive page. Leave it unticked and it stays private.</span>
+              </span>
+            </label>
+
+            <div class="field" id="support-attribution-field" hidden>
+              <label for="support-attribution" class="field-label">Credit it to <span class="field-optional">&middot; optional</span></label>
+              <input id="support-attribution" class="field-input" maxlength="120" autocomplete="off" placeholder="Leslie, Ontario" />
+              <p class="field-hint">How you'd like to be named if it's quoted. Leave blank to stay anonymous.</p>
+            </div>
+
             <div class="field">
               <label for="support-email" class="field-label">Your email <span class="field-optional">&middot; optional</span></label>
               <input id="support-email" type="email" class="field-input" autocomplete="email" placeholder="you@example.com" />
               <p class="field-hint">Only used to tell you what happens with this report. Leave blank to send anonymously.</p>
             </div>
 
-            <label class="check-card">
+            <label class="check-card" id="support-log-field">
               <input type="checkbox" id="support-include-log" checked />
               <span>
                 <span class="check-title">Include the activity log</span>
@@ -426,17 +475,19 @@
           <h3>When iRevive goes online</h3>
           <ul>
             <li><strong>icloud.com</strong>: the page you're using to restore.</li>
-            <li><strong>GitHub</strong>: once at launch, to check for updates. GitHub sees your IP address, as it would for any download. Nothing else is sent.</li>
+            <li><strong>backend.gilroy.digital</strong>: once at launch, and again if you press Check for updates, to ask whether a newer version exists. It sees your IP address. Nothing about you or your files is sent.</li>
+            <li><strong>GitHub</strong>: only while an update is downloading, since the app files are hosted there. GitHub sees your IP address, as it would for any download.</li>
             <li><strong>Links</strong> to Stripe (donations) and gilroy.digital open in your own browser, and only when you click them.</li>
           </ul>
 
-          <h3>Reports</h3>
+          <h3>Feedback and reports</h3>
           <p>
-            Nothing is sent unless you fill in the Report form and press Submit. It then goes to
+            Nothing is sent unless you fill in the Feedback form and press Submit. It then goes to
             Gilroy Digital's ticket system and includes:
           </p>
           <ul>
             <li>The title, details and any files you attach.</li>
+            <li>For feedback, your star rating, and your name only if you ask to be quoted.</li>
             <li>Your email, if you give one, used only to update you on that report.</li>
             <li>Your iRevive version and macOS version.</li>
             <li>The activity log, if you leave that box ticked.</li>

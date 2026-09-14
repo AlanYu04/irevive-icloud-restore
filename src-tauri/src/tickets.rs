@@ -43,6 +43,13 @@ pub struct TicketInput {
     severity: Option<String>,
     #[serde(default)]
     is_urgent: bool,
+    /// Feedback only: 1-5 stars, and whether it may be quoted publicly.
+    #[serde(default)]
+    rating: Option<u8>,
+    #[serde(default)]
+    can_publish: bool,
+    #[serde(default)]
+    attribution: Option<String>,
     #[serde(default)]
     email: Option<String>,
     /// The Log panel's text, present only if the reporter left it ticked.
@@ -130,7 +137,17 @@ pub async fn submit_ticket(app_handle: tauri::AppHandle, ticket: TicketInput) ->
     if title.is_empty() {
         return Err("Give it a one-line title.".into());
     }
-    let kind = if ticket.kind == "feature" { "feature" } else { "bug" };
+    let kind = match ticket.kind.as_str() {
+        "feature" => "feature",
+        "feedback" => "feedback",
+        _ => "bug",
+    };
+    let attribution = ticket
+        .attribution
+        .as_deref()
+        .map(str::trim)
+        .filter(|a| !a.is_empty())
+        .map(str::to_string);
     let email = ticket
         .email
         .as_deref()
@@ -168,10 +185,18 @@ pub async fn submit_ticket(app_handle: tauri::AppHandle, ticket: TicketInput) ->
             "description": ticket.description.trim(),
             "data": data,
         });
-        if kind == "bug" {
-            body["severity"] = json!(ticket.severity.as_deref().unwrap_or("medium"));
-        } else {
-            body["is_urgent"] = json!(ticket.is_urgent);
+        match kind {
+            "bug" => body["severity"] = json!(ticket.severity.as_deref().unwrap_or("medium")),
+            "feature" => body["is_urgent"] = json!(ticket.is_urgent),
+            _ => {
+                if let Some(stars) = ticket.rating.filter(|r| (1..=5).contains(r)) {
+                    body["rating"] = json!(stars);
+                }
+                body["can_publish"] = json!(ticket.can_publish);
+                if let Some(a) = &attribution {
+                    body["attribution"] = json!(a);
+                }
+            }
         }
         if let Some(e) = &email {
             body["email"] = json!(e);
@@ -185,10 +210,19 @@ pub async fn submit_ticket(app_handle: tauri::AppHandle, ticket: TicketInput) ->
             .text("title", title.to_string())
             .text("description", ticket.description.trim().to_string())
             .text("data", data.to_string());
-        form = if kind == "bug" {
-            form.text("severity", ticket.severity.unwrap_or_else(|| "medium".into()))
-        } else {
-            form.text("is_urgent", ticket.is_urgent.to_string())
+        form = match kind {
+            "bug" => form.text("severity", ticket.severity.unwrap_or_else(|| "medium".into())),
+            "feature" => form.text("is_urgent", ticket.is_urgent.to_string()),
+            _ => {
+                let mut f = form.text("can_publish", ticket.can_publish.to_string());
+                if let Some(stars) = ticket.rating.filter(|r| (1..=5).contains(r)) {
+                    f = f.text("rating", stars.to_string());
+                }
+                if let Some(a) = attribution.clone() {
+                    f = f.text("attribution", a);
+                }
+                f
+            }
         };
         if let Some(e) = email {
             form = form.text("email", e);

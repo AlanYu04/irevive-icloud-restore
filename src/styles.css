@@ -53,8 +53,16 @@ body {
 
 .app-header {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Logo, name and version on one line with the buttons; tagline beneath. */
+.header-top {
+  display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
 }
 
 .brand {
@@ -109,13 +117,13 @@ body {
 }
 
 .tagline {
-  display: block;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 400;
   letter-spacing: 0.02em;
   color: var(--text-muted);
   font-style: italic;
-  margin-top: 1px;
+  /* Lines up with the title, past the logo. */
+  padding-left: 52px;
 }
 
 .status-bar {
@@ -1114,8 +1122,8 @@ body {
 }
 
 .choice-feature:hover {
-  border-color: rgba(251, 191, 36, 0.5);
-  background: rgba(251, 191, 36, 0.06);
+  border-color: rgba(52, 211, 153, 0.5);
+  background: rgba(52, 211, 153, 0.06);
 }
 
 .choice-icon {
@@ -1136,8 +1144,8 @@ body {
 }
 
 .choice-feature .choice-icon {
-  background: rgba(251, 191, 36, 0.15);
-  color: var(--yellow);
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--green);
 }
 
 .choice-title {
@@ -1541,4 +1549,143 @@ body {
 
 .apple-error-close:hover {
   color: var(--text-secondary);
+}
+
+/* ── Tabs, steps and footer ────────────────────────────── */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab:hover:not(.active) {
+  color: var(--text-secondary);
+}
+
+.tab.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.tab-panel[hidden] {
+  display: none;
+}
+
+/* The step that's next is filled in; the other waits its turn. */
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+#panel-manual[data-stage="select"] #btn-select,
+#panel-manual[data-stage="restore"] #btn-restore {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+#panel-manual[data-stage="select"] #btn-select:hover:not(:disabled),
+#panel-manual[data-stage="restore"] #btn-restore:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+#panel-manual[data-stage="select"] #btn-select .step-badge,
+#panel-manual[data-stage="restore"] #btn-restore .step-badge {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.btn-quiet {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 10px 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.auto-hint {
+  flex: 1 1 100%;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: -8px;
+}
+
+/* ── Feedback ──────────────────────────────────────────── */
+
+.choice-feedback:hover {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.choice-feedback .choice-icon {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--yellow);
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star {
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: var(--border);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.12s;
+}
+
+.star:hover,
+.star.lit {
+  color: var(--yellow);
+}
+
+.rating-hint {
+  margin-left: 8px;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.btn-cancelling {
+  background: rgba(248, 113, 113, 0.14) !important;
+  border-color: var(--red) !important;
+  color: var(--red) !important;
 }

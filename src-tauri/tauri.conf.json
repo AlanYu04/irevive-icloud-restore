@@ -7,8 +7,10 @@
     "windows": [
       {
         "height": 700,
+        "minHeight": 620,
+        "minWidth": 720,
         "title": "iRevive",
-        "width": 900
+        "width": 820
       }
     ],
     "withGlobalTauri": true
