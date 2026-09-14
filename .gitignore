@@ -28,3 +28,6 @@ info_for_claude_signing_key_etc.txt
 
 # Ticket API notes (contains the read key — never commit)
 TICKETS.md
+
+# Javelin writes this on every release
+javelin-manifest-*.json

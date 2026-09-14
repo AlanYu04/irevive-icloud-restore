@@ -4,7 +4,7 @@
 
 iRevive automates the painful process of restoring thousands of files from iCloud's Data Recovery page. Instead of manually selecting and restoring files one by one, iRevive lets you batch-select and restore hundreds at a time.
 
-[![Download iRevive](https://img.shields.io/badge/Download-iRevive_for_macOS-af52de?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Fleebee/irevive-icloud-restore/releases/latest/download/iRevive_aarch64.dmg)
+[![Download iRevive](https://img.shields.io/badge/Download-iRevive_for_macOS-af52de?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Fleebee/irevive-icloud-restore/releases/latest/download/iRevive-darwin-aarch64.dmg)
 
 ## How It Works
 
