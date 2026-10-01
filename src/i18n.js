@@ -96,6 +96,7 @@
     "error.confirmation": "Could not verify Apple’s recovery confirmation.",
     "error.readyTimeout": "Restore did not become available in time.",
     "error.startRestore": "Recovery could not be started or verified.",
+    "autoErrorStop": "Auto stops when it cannot verify a batch. Check the iCloud window before restarting.",
     "feedback": "Feedback",
     "donate": "Donate"
   },
@@ -194,6 +195,7 @@
     "error.confirmation": "无法确认 Apple 恢复成功提示。",
     "error.readyTimeout": "恢复按钮未在规定时间内可用。",
     "error.startRestore": "无法启动或确认恢复操作。",
+    "autoErrorStop": "无法确认恢复批次时，自动模式会停止。重新启动前请检查 iCloud 窗口。",
     "feedback": "反馈",
     "donate": "捐赠"
   }
