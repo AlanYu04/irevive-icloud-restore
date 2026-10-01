@@ -19,7 +19,7 @@ function app() {
       get firstChild() { return this.children[0]; },
       set textContent(value) { this.text = String(value); this.children = []; this.html = String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); },
       get textContent() { return this.text || ''; },
-      set innerHTML(value) { this.html = value; }, get innerHTML() { return this.html || ''; },
+      set innerHTML(value) { this.html = value; if (value === '') this.children = []; }, get innerHTML() { return this.html || ''; },
     };
   };
   const node = id => { if (!nodes.has(id)) nodes.set(id, element(id)); return nodes.get(id); };
