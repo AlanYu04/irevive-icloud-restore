@@ -43,3 +43,7 @@ The change removes fixed pauses and unnecessary scrolling, but has no production
 
 
 Recorded on 2026-10-01: 62 targeted tests and frontend syntax checks passed; `cargo check --locked` passed on Apple Silicon macOS. The new language module measured 100% lines/functions and 95.65% branches. Browser verification is against synthetic files only; production throughput is not measured.
+
+Both cross-language browser runs confirmed two synthetic batches of 100 and 50 files. / 两种交叉语言组合均确认了 100＋50 个模拟文件。
+
+![Chinese recovery controls with English simulated page; all 150 files are synthetic](images/recovery-zh-demo.png)
